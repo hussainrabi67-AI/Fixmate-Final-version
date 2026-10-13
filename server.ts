@@ -1,5 +1,4 @@
 import express from 'express'
-import { createServer as createViteServer } from 'vite'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs'
@@ -487,7 +486,7 @@ app.post('/api/n8n/test', async (req, res) => {
           status: altResult.status,
           suggestedUrl: altUrl,
           message: 'Connected via n8n Test Webhook! Note: In your n8n editor, this workflow is currently in Test mode. To use the production webhook, toggle the workflow switch to "Active" (top-right of canvas).',
-          data: altResult.text.slice(0, 300),
+          data: (altResult.text || '').slice(0, 300),
         })
       }
     } else if (!callResult.ok && targetUrl.includes('/webhook-test/')) {
@@ -499,7 +498,7 @@ app.post('/api/n8n/test', async (req, res) => {
           status: altResult.status,
           suggestedUrl: altUrl,
           message: 'Connected via n8n Production Webhook! The workflow is active.',
-          data: altResult.text.slice(0, 300),
+          data: (altResult.text || '').slice(0, 300),
         })
       }
     }
@@ -509,7 +508,7 @@ app.post('/api/n8n/test', async (req, res) => {
         success: true,
         status: callResult.status,
         message: 'Successfully connected to n8n AI Agent webhook! Workflow is live and responding.',
-        data: callResult.text.slice(0, 300),
+        data: (callResult.text || '').slice(0, 300),
       })
     }
 
@@ -680,6 +679,7 @@ async function startServer() {
   const isDev = process.env.NODE_ENV !== 'production'
 
   if (isDev) {
+    const { createServer: createViteServer } = await import('vite')
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: 'spa',
@@ -698,7 +698,12 @@ async function startServer() {
   })
 }
 
-startServer().catch((err) => {
-  console.error('Failed to start server:', err)
-  process.exit(1)
-})
+if (process.env.VERCEL !== '1') {
+  startServer().catch((err) => {
+    console.error('Failed to start server:', err)
+    process.exit(1)
+  })
+}
+
+export default app
+export { app }
