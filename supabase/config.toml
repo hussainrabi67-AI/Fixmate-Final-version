@@ -1,0 +1,3 @@
+[functions.ai-diagnose]
+verify_jwt = true
+entrypoint = "./functions/ai-diagnose/index.ts"
